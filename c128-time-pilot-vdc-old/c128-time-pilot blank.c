@@ -1,5 +1,5 @@
 #include <c128.h>
-#include <c128-cpu.h>
+// #include <c128-cpu.h>
 #include "c128-vdc.h"
 
 #pragma var_model(zp)
@@ -113,7 +113,7 @@ void buffer(byte x, byte y, byte* buffer, byte* sprite) {
 
 
 void draw(byte x, byte y, byte* buffer) {
-    word vram_address = (word)y * 40 + x;
+    word vram_address = (word)y * 32 + x;
     vdc_memcpy_32x21_vram_ram(vram_address, buffer);
 }
 
@@ -122,6 +122,9 @@ inline void restore(byte x, byte y, byte w, byte h) {
     vdc_memcpy_xywh_vram_ram(0, screen_address, x, y, w, h);
 }
 
+void c128_cpu_mode_fast() {
+    *((unsigned char*)0xD030) |= 0x01;
+}
 
 
 void main() {
@@ -146,7 +149,7 @@ void main() {
     vdc_write_register(VDC_R31_DATA, 1);
 
     // Configure the VDC for 320x200 bitmap mode with the specified start address
-    vdc_bitmap_320x200(bitmap_start_address);
+    vdc_bitmap_256x200(bitmap_start_address);
 
     // Clear the screen by filling the entire VRAM with zeros
     // for(byte i=0; i < 255; i++)
@@ -154,7 +157,8 @@ void main() {
     byte pattern1[8] = {0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa};
     byte pattern2[8] = {0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55};
 
-    screen_bitmap_320x200_background_pattern(screen_address, pattern0);
+    // screen_bitmap_320x200_background_pattern(screen_address, pattern0);
+    screen_bitmap_background_pattern(screen_address, pattern1);
     vdc_memcpy_pages_vram_ram(bitmap_start_address, screen_address, 0x20);
 
     sprite_init();
@@ -167,8 +171,8 @@ void main() {
     signed char dy[8] = { -1, -1, -1, -1, -1, -1, -1, -1 };
 
     while(1) {
-        // vdc_memcpy_pages_vram_ram(bitmap_start_address, screen_address, 0x20);
-        for(word s = 0; s < 8; s++) {
+        vdc_memcpy_lines_vram(bitmap_start_address, 25);
+        for(word s = 0; s < 1; s++) {
             if(fx[s] >= 254) dx[s] = -1;
             if(fx[s] <= 2) dx[s] = 1;
             if(fy[s] >= 198) dy[s] = -1;
@@ -184,23 +188,14 @@ void main() {
             byte* sprite_buffer = sprites[s].sprite_buffer;
             byte* sprite_shift = sprite_shifts[fx[s] % 8];
 
-            buffer(sx, sy, sprites[s].sprite_buffer, sprite_shift);
+            // buffer(sx, sy, sprites[s].sprite_buffer, sprite_shift);
             draw(sx, sy, sprite_shift);
             // for(word i=0; i<5000; i++);
 
-            if(py < sy)
-                restore(sx, py, 4, sy - py);
-            if(py > sy)
-                restore(sx, sy + 21, 4, py - sy);
-            if(px < sx)
-                restore(px, sy, sx - px, sy + 21);
-            if(px > sx)
-                restore(sx + 4, sy, px - sx, sy + 21);
- 
             sprites[s].px = sx;
             sprites[s].py = sy;
         }
-        // vdc_wait_frame();
+        // vdc_wait_vblank();
     }
     
     while(1) { }  // Infinite loop to keep the program running

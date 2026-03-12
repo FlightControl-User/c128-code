@@ -16,8 +16,8 @@ void vdc_memset16_vram(word vram_address, word size, byte value);
 void vdc_memcpy8_vram_ram(word vram_address, const byte* sram_data, byte length);
 void vdc_memcpy_lines_vram(word vram_address, byte lines);
 
-void vdc_32x21_ram_vram(byte* buffer, word vram_address);
-void vdc_32x21_vram_ram(word vram_address, byte* buffer);
+void vdc_memcpy_32x21_ram_vram(byte* buffer, word vram_address);
+void vdc_memcpy_32x21_vram_ram(word vram_address, byte* buffer);
 void vdc_memcpy_24x21_vram_ram_offset(word vram_address, byte* buffer, byte offset);
 
 

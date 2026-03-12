@@ -45,12 +45,6 @@ byte inline vdc_read() {
     return d;
 }
 
-byte inline vdc_read_nowait() {
-    // Read the data from the VDC_DATA_PORT
-    byte d = *VDC_DATA_PORT;
-    return d;
-}
-
 void inline vdc_write(byte d) {
     // Write the data to the VDC_DATA_PORT
     vdc_wait();
@@ -180,7 +174,7 @@ void vdc_memcpy_lines_vram(word vram_address, byte lines) {
 
     // Write the data byte by byte to the VDC
     const byte *sram_data = (char*)$4000;
-    inline for(byte l: 0..200) {
+    for(byte l: 0..200) {
         for(byte col: 0..31 ) {
             while(!(*VDC_REGISTER_PORT & 0x80));
             byte *b = (sram_data+l*32);
@@ -200,16 +194,36 @@ void vdc_memclr_pages_vram(word vram_address, byte pages) {
 
     // Write the data byte by byte to the VDC
     for(byte p = 0; p < pages; p++) {
-        inline for (byte m: 0..127 ) {
+        for (byte m: 0..127 ) {
             *VDC_DATA_PORT = 0;
         }
-        inline for (byte m: 0..127 ) {
+        for (byte m: 0..127 ) {
             *VDC_DATA_PORT = 0;
         }
     }
     vdc_wait_novblank();
 }
 
+// Function to copy data from RAM to VRAM
+void vdc_memcpy_pages_vram_ram(word vram_address, byte *screen, byte pages) {
+    vdc_wait_vblank();
+    // Set the VDC address to the target VRAM location
+    vdc_write_register_nowait(VDC_R18_UADH, BYTE1(vram_address));   // Set high byte of address
+    vdc_write_register_nowait(VDC_R19_UADL, BYTE0(vram_address)); // Set low byte of address
+    vdc_register(VDC_R31_DATA);
+    // vdc_wait();
+
+    // Write the data byte by byte to the VDC
+    for(byte p = 0; p < pages; p++) {
+        for (byte m: 0..127 ) {
+            *VDC_DATA_PORT = *screen++;
+        }
+        for (byte m: 0..127 ) {
+            *VDC_DATA_PORT = *screen++;
+        }
+    }
+    vdc_wait_novblank();
+}
 
 
 inline void vdc_memcpy_xywh_vram_ram(word vram_address, byte* screen, byte x, byte y, byte w, byte h) {
@@ -233,7 +247,7 @@ inline void vdc_memcpy_xywh_vram_ram(word vram_address, byte* screen, byte x, by
     }
 }
 
-inline void vdc_32x21_vram_ram(word vram_address, byte* buffer) {
+inline void vdc_memcpy_32x21_vram_ram(word vram_address, byte* buffer) {
     for (byte row = 0, p = 0; row < 21; row++) {
         // Set the VRAM address for this row
         vdc_write_register(VDC_R18_UADH, BYTE1(vram_address));  // Set high byte of VRAM address
@@ -251,7 +265,7 @@ inline void vdc_32x21_vram_ram(word vram_address, byte* buffer) {
     }
 }
 
-inline void vdc_24x16_vram_ram(word vram_address, byte* buffer) {
+inline void vdc_memcpy_24x16_vram_ram(word vram_address, byte* buffer) {
     // Set the VRAM address for this row
     vdc_write_register(VDC_R18_UADH, BYTE1(vram_address));  // Set high byte of VRAM address
     vdc_write_register_nowait(VDC_R19_UADL, BYTE0(vram_address));  // Set low byte of VRAM address
@@ -384,7 +398,7 @@ inline void vdc_24x16_vram_ram(word vram_address, byte* buffer) {
     vram_address += vdc_config.xbytes;
 }
 
-inline void vdc_32x21_ram_vram(byte* buffer, word vram_address) {
+inline void vdc_memcpy_32x21_ram_vram(byte* buffer, word vram_address) {
     for (byte row = 0, b = 0; row < 21; row++) {
         // Set the VRAM address for this row
         vdc_write_register(VDC_R18_UADH, BYTE1(vram_address));  // Set high byte of VRAM address
@@ -393,23 +407,6 @@ inline void vdc_32x21_ram_vram(byte* buffer, word vram_address) {
         // Write the sprite data from the RAM buffer to the VDC VRAM
         vdc_register(VDC_R31_DATA);  // Prepare VDC to write data to VRAM
         buffer[b++] = vdc_read();
-        buffer[b++] = vdc_read();
-        buffer[b++] = vdc_read();
-        buffer[b++] = vdc_read();
-
-        // Move to the next row
-        vram_address += vdc_config.xbytes;
-    }
-}
-
-inline void vdc_24x16_ram_vram(byte* buffer, word vram_address) {
-    for (byte row = 0, b = 0; row < 16; row++) {
-        // Set the VRAM address for this row
-        vdc_write_register(VDC_R18_UADH, BYTE1(vram_address));  // Set high byte of VRAM address
-        vdc_write_register_nowait(VDC_R19_UADL, BYTE0(vram_address));  // Set low byte of VRAM address
-
-        // Write the sprite data from the RAM buffer to the VDC VRAM
-        vdc_register(VDC_R31_DATA);  // Prepare VDC to write data to VRAM
         buffer[b++] = vdc_read();
         buffer[b++] = vdc_read();
         buffer[b++] = vdc_read();

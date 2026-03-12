@@ -1,15 +1,17 @@
 #include <c128.h>
-// #include <c128-cpu.h>
+#include <c128-cpu.h>
 #include "c128-vdc.h"
 #include "c128-resources.h"
 
 #pragma var_model(zp)
 
-__export char fly[32]; //= kickasm {{{
-//     .var sprite = Sprite("graphics/flies/fly_01","png",0,1,1,32,16,16,2,0,0,1,2,0,2,1)
-//     .var tiledata = MakeTile(sprite)
-//     Data(sprite,tiledata)
-// };}};
+__export char fly[32] = kickasm {{{
+    .var sprite = Sprite("graphics/flies/fly_01","png",0,1,1,32,16,16,2,0,0,1,2,0,2,1)
+    .var pallist = GetPalette(sprite)
+    .var tiledata = MakeTile(sprite,pallist)
+    .var pallistdata = MakePalette(sprite,pallist)
+    Data(sprite,tiledata,pallistdata)
+};}};
 
 
 
@@ -25,62 +27,6 @@ struct sprite_s {
 };
 
 struct sprite_s sprites[8];
-
-__export char fly_shift0[48] = kickasm {{{
-    .var sprite = Sprite("graphics/flies/fly_01","png",0,1,1,32,16,16,2,0,0,1,2,0,2,1)
-    .var tiledata = MakeTile(sprite)
-    .var tileshift = sprite_shift(sprite, tiledata, 2, 0) // one column is added!
-    sprite_data(sprite, tileshift, 3)
-};}};
-
-__export char fly_shift1[48] = kickasm {{{
-    .var sprite = Sprite("graphics/flies/fly_01","png",0,1,1,32,16,16,2,0,0,1,2,0,2,1)
-    .var tiledata = MakeTile(sprite)
-    .var tileshift = sprite_shift(sprite, tiledata, 2, 1) // one column is added!
-    sprite_data(sprite, tileshift, 3)
-};}};
-
-__export char fly_shift2[48] = kickasm {{{
-    .var sprite = Sprite("graphics/flies/fly_01","png",0,1,1,32,16,16,2,0,0,1,2,0,2,1)
-    .var tiledata = MakeTile(sprite)
-    .var tileshift = sprite_shift(sprite, tiledata, 2, 2) // one column is added!
-    sprite_data(sprite, tileshift, 3)
-};}};
-
-__export char fly_shift3[48] = kickasm {{{
-    .var sprite = Sprite("graphics/flies/fly_01","png",0,1,1,32,16,16,2,0,0,1,2,0,2,1)
-    .var tiledata = MakeTile(sprite)
-    .var tileshift = sprite_shift(sprite, tiledata, 2, 3) // one column is added!
-    sprite_data(sprite, tileshift, 3)
-};}};
-
-__export char fly_shift4[48] = kickasm {{{
-    .var sprite = Sprite("graphics/flies/fly_01","png",0,1,1,32,16,16,2,0,0,1,2,0,2,1)
-    .var tiledata = MakeTile(sprite)
-    .var tileshift = sprite_shift(sprite, tiledata, 2, 4) // one column is added!
-    sprite_data(sprite, tileshift, 3)
-};}};
-
-__export char fly_shift5[48] = kickasm {{{
-    .var sprite = Sprite("graphics/flies/fly_01","png",0,1,1,32,16,16,2,0,0,1,2,0,2,1)
-    .var tiledata = MakeTile(sprite)
-    .var tileshift = sprite_shift(sprite, tiledata, 2, 5) // one column is added!
-    sprite_data(sprite, tileshift, 3)
-};}};
-
-__export char fly_shift6[48] = kickasm {{{
-    .var sprite = Sprite("graphics/flies/fly_01","png",0,1,1,32,16,16,2,0,0,1,2,0,2,1)
-    .var tiledata = MakeTile(sprite)
-    .var tileshift = sprite_shift(sprite, tiledata, 2, 6) // one column is added!
-    sprite_data(sprite, tileshift, 3)
-};}};
-
-__export char fly_shift7[48] = kickasm {{{
-    .var sprite = Sprite("graphics/flies/fly_01","png",0,1,1,32,16,16,2,0,0,1,2,0,2,1)
-    .var tiledata = MakeTile(sprite)
-    .var tileshift = sprite_shift(sprite, tiledata, 2, 7) // one column is added!
-    sprite_data(sprite, tileshift, 3)
-};}};
 
 byte sprite_shift0[4*21];
 byte sprite_shift1[4*21];
@@ -146,31 +92,31 @@ byte vram = 0;
 
 const byte* c128_mmu = (byte*)0xff00;
 
-// inline void draw24(byte x, byte y, byte* buffer) {
-//     word vram_address = vram_addresses[vram] + (word)y * 32 + x;
-//     vdc_memcpy_24x16_vram_ram(vram_address, buffer);
-// }
+inline void draw24(byte x, byte y, byte* buffer) {
+    word vram_address = vram_addresses[vram] + (word)y * 32 + x;
+    vdc_24x16_vram_ram(vram_address, buffer);
+}
 
-// inline void draw32(byte x, byte y, byte* buffer) {
-//     word vram_address = vram_addresses[vram] + (word)y * 32 + x;
-//     vdc_memcpy_32x21_vram_ram(vram_address, buffer);
-// }
+inline void draw32(byte x, byte y, byte* buffer) {
+    word vram_address = vram_addresses[vram] + (word)y * 32 + x;
+    vdc_32x21_vram_ram(vram_address, buffer);
+}
 
-// inline void read24(byte x, byte y, byte* buffer) {
-//     word vram_address = vram_addresses[vram] + (word)y * 32 + x;
-//     vdc_memcpy_24x16_ram_vram(buffer, vram_address);
-// }
+inline void read24(byte x, byte y, byte* buffer) {
+    word vram_address = vram_addresses[vram] + (word)y * 32 + x;
+    vdc_24x16_ram_vram(buffer, vram_address);
+}
 
-// inline void read32(byte x, byte y, byte* buffer) {
-//     word vram_address = vram_addresses[vram] + (word)y * 32 + x;
-//     vdc_memcpy_32x21_ram_vram(buffer, vram_address);
-// }
+inline void read32(byte x, byte y, byte* buffer) {
+    word vram_address = vram_addresses[vram] + (word)y * 32 + x;
+    vdc_32x21_ram_vram(buffer, vram_address);
+}
 
-// inline void merge32(byte* buffer, byte* sprite) {
-//     inline for(byte b = 0; b < 84; b++) {
-//         buffer[b] |= sprite[b];
-//     }
-// }
+inline void merge32(byte* buffer, byte* sprite) {
+    inline for(byte b = 0; b < 84; b++) {
+        buffer[b] |= sprite[b];
+    }
+}
 
 inline void merge24(byte* buffer, byte* sprite) {
     inline for(byte b = 0; b < 63; b++) {
@@ -178,15 +124,12 @@ inline void merge24(byte* buffer, byte* sprite) {
     }
 }
 
-void c128_cpu_mode_fast() {
-    *((unsigned char*)0xD030) |= 0x80;
-}
 
 void main() {
 
     asm { sei }  // Disable interrupts
     // Set the bank to RAM all
-    // *c128_mmu = 0b00001110;
+    *c128_mmu = 0b00001110;
 
     // Set the CPU to fast mode
     c128_cpu_mode_fast();
@@ -206,69 +149,69 @@ void main() {
     vram ^= 1;
 
 
-    // sprite_init();
-    // shift16(sprite_shifts, fly);
+    sprite_init();
+    shift16(sprite_shifts, fly);
 
-    // byte fx[8] = {0, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0};
-    // byte fy[8] = {0, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0};
-    // signed char dx[8] = { 1, 1, 1, 1, 1, 1, 1, 1 };
-    // signed char dy[8] = { -1, -1, -1, -1, -1, -1, -1, -1 };
+    byte fx[8] = {0, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0};
+    byte fy[8] = {0, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0};
+    signed char dx[8] = { 1, 1, 1, 1, 1, 1, 1, 1 };
+    signed char dy[8] = { -1, -1, -1, -1, -1, -1, -1, -1 };
 
-    // byte sp = 0x10; // Stationary position on the x axis.
-    // byte sd = 1; // Stationary direction.
-    // byte sm[8*4]; // Stationary matrix, the byte indicates the type of enemy, 0 is none.
+    byte sp = 0x10; // Stationary position on the x axis.
+    byte sd = 1; // Stationary direction.
+    byte sm[8*4]; // Stationary matrix, the byte indicates the type of enemy, 0 is none.
 
-    // sm[0] = 1;
-    // sm[1] = 1;
-    // sm[2] = 1; 
-    // sm[3] = 1; 
-    // sm[4] = 1; 
-    // sm[5] = 1; 
-    // sm[6] = 1; 
-    // sm[7] = 1; 
+    sm[0] = 1;
+    sm[1] = 1;
+    sm[2] = 1; 
+    sm[3] = 1; 
+    sm[4] = 1; 
+    sm[5] = 1; 
+    sm[6] = 1; 
+    sm[7] = 1; 
 
-    // while(1) {
-    //     vdc_wait_vblank();
-    //     vdc_bitmap_background(vram_addresses[vram], 0);
-    //     for(byte s = 0; s < 8; s++) {
-    //         if(fx[s] >= 254-24) dx[s] = -1;
-    //         if(fx[s] <= 2) dx[s] = 1;
-    //         if(fy[s] >= 198-21) dy[s] = -1;
-    //         if(fy[s] <= 2) dy[s] = 1;
+    while(1) {
+        vdc_wait_vblank();
+        vdc_bitmap_background(vram_addresses[vram], 0);
+        for(byte s = 0; s < 8; s++) {
+            if(fx[s] >= 254-24) dx[s] = -1;
+            if(fx[s] <= 2) dx[s] = 1;
+            if(fy[s] >= 198-21) dy[s] = -1;
+            if(fy[s] <= 2) dy[s] = 1;
 
-    //         fx[s] += dx[s];
-    //         fy[s] += dy[s];
+            fx[s] += dx[s];
+            fy[s] += dy[s];
 
-    //         byte px = sprites[s].px;
-    //         byte py = sprites[s].py;
-    //         byte sx = (byte)fx[s] / 8;
-    //         byte sy = fy[s];
-    //         byte* sprite_shift = sprite_shifts[fx[s] % 8];
-    //         // Read sprite into buffer;
-    //         read24(sx, sy, sprite_buffer);
-    //         merge24(sprite_buffer, sprite_shift);
-    //         draw24(sx, sy, sprite_buffer);
+            byte px = sprites[s].px;
+            byte py = sprites[s].py;
+            byte sx = (byte)fx[s] / 8;
+            byte sy = fy[s];
+            byte* sprite_shift = sprite_shifts[fx[s] % 8];
+            // Read sprite into buffer;
+            read24(sx, sy, sprite_buffer);
+            merge24(sprite_buffer, sprite_shift);
+            draw24(sx, sy, sprite_buffer);
 
-    //         // draw24(sx, sy, sprite_shift);
-    //     }
+            // draw24(sx, sy, sprite_shift);
+        }
 
-    //     // // Draw stationary.
-    //     // for(byte e = 0; e < 8*4; e++) {
-    //     //     byte x = e % 8;
-    //     //     byte y = e / 8;
-    //     //     byte m = sm[e];
-    //     //     if(m) {
-    //     //         byte* sprite_shift = sprite_shifts[fx[s] % 8];
-    //     //         draw24(sp + x, y, sprite_shift);
-    //     //     }
-    //     // }
-    //     // if(sp >= 0x28) sd = -1;
-    //     // if(sp <= 0x10) sd = 1;
-    //     // sp += sd;
+        // // Draw stationary.
+        // for(byte e = 0; e < 8*4; e++) {
+        //     byte x = e % 8;
+        //     byte y = e / 8;
+        //     byte m = sm[e];
+        //     if(m) {
+        //         byte* sprite_shift = sprite_shifts[fx[s] % 8];
+        //         draw24(sp + x, y, sprite_shift);
+        //     }
+        // }
+        // if(sp >= 0x28) sd = -1;
+        // if(sp <= 0x10) sd = 1;
+        // sp += sd;
 
-    //     vdc_bitmap_start(vram_addresses[vram]);
-    //     vram ^= 1;
-    // }
+        vdc_bitmap_start(vram_addresses[vram]);
+        vram ^= 1;
+    }
     
     while(1) { }  // Infinite loop to keep the program running
 }

@@ -1,5 +1,5 @@
 #include <c128.h>
-#include <c128-cpu.h>
+// #include <c128-cpu.h>
 #include "c128-vdc.h"
 
 #pragma var_model(zp)
@@ -16,6 +16,11 @@ const byte* c128_mmu = (byte*)0xff00;
 inline void restore(byte x, byte y, byte w, byte h) {
     vdc_memcpy_xywh_vram_ram(0, screen_address, x, y, w, h);
 }
+
+void c128_cpu_mode_fast() {
+    *((unsigned char*)0xD030) |= 0x01;
+}
+
 
 
 
